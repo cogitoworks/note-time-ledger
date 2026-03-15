@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>note Time Ledger</title>
+  <style>
+    /* ============================================================
+       Popup Styles - 観測ツールとして必要最低限のスタイリング
+       ============================================================ */
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 640px;
+      max-height: 560px;
+      overflow-y: auto;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+      font-size: 13px;
+      color: #333;
+      background: #fafafa;
+    }
+
+    /* Header */
+    .ntl-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .ntl-header h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #2c8c6e;
+    }
+
+    .ntl-header-meta {
+      font-size: 11px;
+      color: #888;
+    }
+
+    /* Toolbar */
+    .ntl-toolbar {
+      display: flex;
+      gap: 8px;
+      padding: 8px 16px;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+    }
+
+    .ntl-toolbar button {
+      padding: 5px 12px;
+      font-size: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #fff;
+      cursor: pointer;
+      color: #555;
+      transition: background 0.15s;
+    }
+
+    .ntl-toolbar button:hover {
+      background: #f0f0f0;
+    }
+
+    /* Table */
+    .ntl-table-wrap {
+      padding: 0 16px 16px;
+    }
+
+    table.ntl-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    .ntl-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: #888;
+      padding: 6px 8px;
+      border-bottom: 2px solid #e0e0e0;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .ntl-table th.ntl-num {
+      text-align: right;
+    }
+
+    .ntl-table td {
+      padding: 7px 8px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: top;
+    }
+
+    .ntl-table tr:hover td {
+      background: #f7fdf9;
+    }
+
+    .ntl-table td.ntl-num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .ntl-title-cell {
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ntl-title-cell a {
+      color: #333;
+      text-decoration: none;
+    }
+
+    .ntl-title-cell a:hover {
+      color: #2c8c6e;
+      text-decoration: underline;
+    }
+
+    /* 差分表示 */
+    .ntl-diff {
+      font-size: 11px;
+      margin-left: 4px;
+    }
+
+    .ntl-diff--positive {
+      color: #2e7d32;
+    }
+
+    .ntl-diff--zero {
+      color: #bbb;
+    }
+
+    .ntl-diff--negative {
+      color: #c62828;
+    }
+
+    /* 最終取得 */
+    .ntl-date {
+      font-size: 11px;
+      color: #aaa;
+    }
+
+    /* Empty state */
+    .ntl-empty {
+      text-align: center;
+      padding: 48px 16px;
+      color: #999;
+    }
+
+    .ntl-empty p {
+      margin: 8px 0;
+    }
+
+    .ntl-empty .ntl-empty-hint {
+      font-size: 12px;
+    }
+
+    /* Footer */
+    .ntl-footer {
+      padding: 8px 16px;
+      font-size: 11px;
+      color: #aaa;
+      border-top: 1px solid #eee;
+      text-align: center;
+    }
+
+    /* Import file input (hidden) */
+    #ntl-import-input {
+      display: none;
+    }
+
+    /* History panel */
+    .ntl-history-panel {
+      display: none;
+      padding: 12px 16px;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+    }
+
+    .ntl-history-panel.ntl-visible {
+      display: block;
+    }
+
+    .ntl-history-panel h3 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .ntl-history-close {
+      float: right;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: #888;
+      padding: 0 4px;
+    }
+
+    .ntl-history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .ntl-history-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: #888;
+      padding: 4px 6px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .ntl-history-table td {
+      padding: 4px 6px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .ntl-history-table td.ntl-num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Sparkline placeholder (future) */
+    .ntl-sparkline-cell {
+      /* 将来スパークライン用のカラム。MVPでは空 */
+      width: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="ntl-header">
+    <h1>📊 note Time Ledger</h1>
+    <span class="ntl-header-meta" id="ntl-record-count">-</span>
+  </div>
+
+  <div class="ntl-toolbar">
+    <button id="ntl-btn-refresh" title="データを再読み込み">更新</button>
+    <button id="ntl-btn-export" title="全データをJSONで保存">エクスポート</button>
+    <button id="ntl-btn-import" title="JSONからデータを復元">インポート</button>
+    <button id="ntl-btn-clear" title="全データを削除" style="margin-left:auto; color:#c62828;">全削除</button>
+    <input type="file" id="ntl-import-input" accept=".json">
+  </div>
+
+  <!-- 記事履歴パネル（行クリックで開く） -->
+  <div class="ntl-history-panel" id="ntl-history-panel">
+    <button class="ntl-history-close" id="ntl-history-close">&times;</button>
+    <h3 id="ntl-history-title">-</h3>
+    <table class="ntl-history-table">
+      <thead>
+        <tr>
+          <th>日付</th>
+          <th class="ntl-num">ビュー</th>
+          <th class="ntl-num">コメント</th>
+          <th class="ntl-num">スキ</th>
+        </tr>
+      </thead>
+      <tbody id="ntl-history-body"></tbody>
+    </table>
+  </div>
+
+  <!-- メインテーブル -->
+  <div class="ntl-table-wrap">
+    <table class="ntl-table" id="ntl-main-table">
+      <thead>
+        <tr>
+          <th>記事</th>
+          <th class="ntl-num">ビュー</th>
+          <th class="ntl-num">コメント</th>
+          <th class="ntl-num">スキ</th>
+          <th>最終取得</th>
+          <!-- 将来: <th class="ntl-sparkline-cell"></th> -->
+        </tr>
+      </thead>
+      <tbody id="ntl-main-body"></tbody>
+    </table>
+    <div class="ntl-empty" id="ntl-empty">
+      <p>まだデータがありません</p>
+      <p class="ntl-empty-hint">
+        noteの<a href="https://note.com/sitesettings/stats" target="_blank">アクセス状況</a>ページで<br>
+        右下の「📊 記録する」ボタンを押してください
+      </p>
+    </div>
+  </div>
+
+  <div class="ntl-footer">
+    note Time Ledger v<span id="ntl-version">0.1.0</span> — データはすべてローカル保存です
+  </div>
+
+  <!-- popup は拡張コンテキストなので IndexedDB に直接アクセスできる -->
+  <script src="../lib/db.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

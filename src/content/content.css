@@ -1,0 +1,72 @@
+/**
+ * note Time Ledger - Content Script Styles
+ * note のページ上に挿入される要素のスタイル。
+ * 最小限で、note 本体のスタイルと干渉しないようにする。
+ */
+
+/* 記録ボタン（右下フロート） */
+.ntl-capture-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+  padding: 10px 20px;
+  background: #2c8c6e;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: background 0.2s, transform 0.1s;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.ntl-capture-btn:hover {
+  background: #237a5e;
+  transform: translateY(-1px);
+}
+
+.ntl-capture-btn:active {
+  transform: translateY(0);
+}
+
+.ntl-capture-btn:disabled {
+  background: #999;
+  cursor: wait;
+}
+
+/* ステータス通知 */
+.ntl-status {
+  position: fixed;
+  bottom: 72px;
+  right: 24px;
+  z-index: 99999;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  max-width: 360px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  white-space: pre-line;
+  display: none;
+}
+
+.ntl-status--success {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.ntl-status--error {
+  background: #fce4ec;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+}
+
+.ntl-status--info {
+  background: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #90caf9;
+}

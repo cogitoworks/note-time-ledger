@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "note Time Ledger",
+  "version": "0.1.0",
+  "description": "noteダッシュボードの記事数値に時間軸を与える観測ツール",
+  "permissions": [
+    "storage"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://note.com/sitesettings/stats*"
+      ],
+      "js": [
+        "src/adapter/note-dom-parser.js",
+        "src/content/content.js"
+      ],
+      "css": [
+        "src/content/content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "src/background/service-worker.js"
+  },
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_title": "note Time Ledger"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
