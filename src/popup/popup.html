@@ -240,9 +240,82 @@
 
     /* Sparkline placeholder (future) */
     .ntl-sparkline-cell {
-      /* 将来スパークライン用のカラム。MVPでは空 */
       width: 0;
       padding: 0;
+    }
+
+    /* Domain settings panel */
+    .ntl-domain-panel {
+      display: none;
+      padding: 12px 16px;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+    }
+
+    .ntl-domain-panel.ntl-visible {
+      display: block;
+    }
+
+    .ntl-domain-panel h3 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .ntl-domain-desc {
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .ntl-domain-add {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .ntl-domain-add input {
+      flex: 1;
+      padding: 5px 8px;
+      font-size: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .ntl-domain-add button {
+      padding: 5px 12px;
+      font-size: 12px;
+      border: 1px solid #2c8c6e;
+      border-radius: 4px;
+      background: #2c8c6e;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .ntl-domain-add button:hover {
+      background: #24775d;
+    }
+
+    .ntl-domain-list {
+      list-style: none;
+      font-size: 12px;
+    }
+
+    .ntl-domain-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .ntl-domain-remove {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #c62828;
+      font-size: 16px;
+      padding: 0 4px;
     }
   </style>
 </head>
@@ -256,8 +329,21 @@
     <button id="ntl-btn-refresh" title="データを再読み込み">更新</button>
     <button id="ntl-btn-export" title="全データをJSONで保存">エクスポート</button>
     <button id="ntl-btn-import" title="JSONからデータを復元">インポート</button>
+    <button id="ntl-btn-settings" title="独自ドメイン設定">⚙</button>
     <button id="ntl-btn-clear" title="全データを削除" style="margin-left:auto; color:#c62828;">全削除</button>
     <input type="file" id="ntl-import-input" accept=".json">
+  </div>
+
+  <!-- Domain settings panel -->
+  <div class="ntl-domain-panel" id="ntl-domain-panel">
+    <button class="ntl-history-close" id="ntl-domain-close">&times;</button>
+    <h3>Custom Domains</h3>
+    <p class="ntl-domain-desc">noteの独自ドメインを追加すると、そのドメインのスタッツページでも記録できます。</p>
+    <div class="ntl-domain-add">
+      <input type="text" id="ntl-domain-input" placeholder="例: hayakawabooks.com">
+      <button id="ntl-btn-add-domain">追加</button>
+    </div>
+    <ul id="ntl-domain-list" class="ntl-domain-list"></ul>
   </div>
 
   <!-- 記事履歴パネル（行クリックで開く） -->
@@ -302,7 +388,7 @@
   </div>
 
   <div class="ntl-footer">
-    note Time Ledger v<span id="ntl-version">0.1.0</span> — データはすべてローカル保存です
+    note Time Ledger v<span id="ntl-version">0.2.0</span> — データはすべてローカル保存です
   </div>
 
   <!-- popup は拡張コンテキストなので IndexedDB に直接アクセスできる -->

@@ -83,8 +83,8 @@ const SELECTORS = {
  * URL/IDパターン
  */
 const URL_PATTERNS = {
-  /** [VERIFIED] このページがダッシュボード統計ページかどうか */
-  isDashboardStats: /^https:\/\/note\.com\/sitesettings\/stats/,
+  /** note.com + Pro custom domain stats pages */
+  isDashboardStats: /^https:\/\/[^/]+\/sitesettings\/stats/,
 
   /**
    * [VERIFIED] 記事URLから記事IDを抽出
@@ -142,7 +142,7 @@ function parseSingleRow(row, index) {
     }
 
     const href = link.getAttribute('href') || '';
-    const fullUrl = href.startsWith('http') ? href : 'https://note.com' + href;
+    const fullUrl = href.startsWith('http') ? href : window.location.origin + href;
 
     // 記事IDを抽出
     const idMatch = fullUrl.match(URL_PATTERNS.articleId);
