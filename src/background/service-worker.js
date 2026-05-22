@@ -9,9 +9,8 @@
  */
 
 const DB_NAME = 'note-time-ledger';
-const DB_VERSION = 2;
+const DB_VERSION = 1;
 const STORE_NAME = 'snapshots';
-const DOMAIN_STORE = 'domains';
 
 /**
  * @returns {Promise<IDBDatabase>}
@@ -29,9 +28,6 @@ function openDB() {
         store.createIndex('articleId', 'articleId', { unique: false });
         store.createIndex('date', 'date', { unique: false });
         store.createIndex('articleId_date', ['articleId', 'date'], { unique: false });
-      }
-      if (!db.objectStoreNames.contains(DOMAIN_STORE)) {
-        db.createObjectStore(DOMAIN_STORE, { keyPath: 'domain' });
       }
     };
     req.onsuccess = (e) => resolve(e.target.result);
@@ -94,66 +90,6 @@ async function getCount() {
 }
 
 // ============================================================
-// Domain management
-// ============================================================
-
-function domainToScriptId(domain) {
-  return 'ntl-custom-' + domain.replace(/[^a-zA-Z0-9]/g, '_');
-}
-
-async function saveDomain(domain) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(DOMAIN_STORE, 'readwrite');
-    tx.objectStore(DOMAIN_STORE).put({ domain });
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(new Error('Failed to save domain'));
-  });
-}
-
-async function deleteDomain(domain) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(DOMAIN_STORE, 'readwrite');
-    tx.objectStore(DOMAIN_STORE).delete(domain);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(new Error('Failed to delete domain'));
-  });
-}
-
-async function getAllDomains() {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const req = db.transaction(DOMAIN_STORE, 'readonly')
-      .objectStore(DOMAIN_STORE).getAll();
-    req.onsuccess = () => resolve(req.result.map(r => r.domain));
-    req.onerror = () => reject(new Error('Failed to get domains'));
-  });
-}
-
-async function registerDomainScript(domain) {
-  const id = domainToScriptId(domain);
-  try {
-    await chrome.scripting.unregisterContentScripts({ ids: [id] });
-  } catch (_) { /* may not exist yet */ }
-  await chrome.scripting.registerContentScripts([{
-    id,
-    matches: ['https://' + domain + '/sitesettings/stats*'],
-    js: ['src/adapter/note-dom-parser.js', 'src/content/content.js'],
-    css: ['src/content/content.css'],
-    runAt: 'document_idle',
-  }]);
-}
-
-async function unregisterDomainScript(domain) {
-  try {
-    await chrome.scripting.unregisterContentScripts({
-      ids: [domainToScriptId(domain)],
-    });
-  } catch (_) { /* already unregistered */ }
-}
-
-// ============================================================
 // Message handler
 // ============================================================
 
@@ -171,23 +107,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({ status: 'ok' });
           break;
         }
-        case 'addDomain': {
-          await saveDomain(message.domain);
-          await registerDomainScript(message.domain);
-          sendResponse({ success: true });
-          break;
-        }
-        case 'removeDomain': {
-          await unregisterDomainScript(message.domain);
-          await deleteDomain(message.domain);
-          sendResponse({ success: true });
-          break;
-        }
-        case 'getDomains': {
-          const domains = await getAllDomains();
-          sendResponse({ domains });
-          break;
-        }
         default:
           sendResponse({ error: 'Unknown message type: ' + message.type });
       }
@@ -196,7 +115,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ error: err.message });
     }
   })();
-  return true;
+  return true; // 非同期レスポンスのため
 });
 
 chrome.runtime.onInstalled.addListener(() => {

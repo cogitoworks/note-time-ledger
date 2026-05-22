@@ -204,87 +204,6 @@
   //  Event Listeners
   // ============================================================
 
-  // ============================================================
-  //  Domain Management
-  // ============================================================
-
-  const domainPanel = document.getElementById('ntl-domain-panel');
-  const domainInput = document.getElementById('ntl-domain-input');
-  const domainListEl = document.getElementById('ntl-domain-list');
-
-  function sendMsg(message) {
-    return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage(message, (response) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-        } else if (response && response.error) {
-          reject(new Error(response.error));
-        } else {
-          resolve(response);
-        }
-      });
-    });
-  }
-
-  async function loadDomains() {
-    try {
-      const response = await sendMsg({ type: 'getDomains' });
-      const domains = response.domains || [];
-      if (domains.length === 0) {
-        domainListEl.innerHTML = '<li style="color:#aaa;">No custom domains added</li>';
-        return;
-      }
-      domainListEl.innerHTML = domains.map((d) => `
-        <li>
-          <span>${esc(d)}</span>
-          <button class="ntl-domain-remove" data-domain="${esc(d)}">&times;</button>
-        </li>
-      `).join('');
-      domainListEl.querySelectorAll('.ntl-domain-remove').forEach((btn) => {
-        btn.addEventListener('click', () => handleRemoveDomain(btn.dataset.domain));
-      });
-    } catch (e) {
-      domainListEl.innerHTML = `<li style="color:red;">${esc(e.message)}</li>`;
-    }
-  }
-
-  async function handleAddDomain() {
-    let domain = domainInput.value.trim();
-    if (!domain) return;
-    domain = domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-    if (!domain || domain.includes(' ')) {
-      alert('Invalid domain format');
-      return;
-    }
-    try {
-      const granted = await chrome.permissions.request({
-        origins: ['https://' + domain + '/*'],
-      });
-      if (!granted) return;
-      await sendMsg({ type: 'addDomain', domain });
-      domainInput.value = '';
-      await loadDomains();
-    } catch (e) {
-      alert('Error: ' + e.message);
-    }
-  }
-
-  async function handleRemoveDomain(domain) {
-    try {
-      await sendMsg({ type: 'removeDomain', domain });
-      try {
-        await chrome.permissions.remove({ origins: ['https://' + domain + '/*'] });
-      } catch (_) { /* optional cleanup */ }
-      await loadDomains();
-    } catch (e) {
-      alert('Error: ' + e.message);
-    }
-  }
-
-  // ============================================================
-  //  Event Listeners
-  // ============================================================
-
   document.getElementById('ntl-btn-refresh').addEventListener('click', render);
   document.getElementById('ntl-btn-export').addEventListener('click', handleExport);
   document.getElementById('ntl-btn-import').addEventListener('click', handleImportClick);
@@ -292,17 +211,6 @@
   document.getElementById('ntl-btn-clear').addEventListener('click', handleClear);
   document.getElementById('ntl-history-close').addEventListener('click', () => {
     historyPanel.classList.remove('ntl-visible');
-  });
-  document.getElementById('ntl-btn-settings').addEventListener('click', () => {
-    domainPanel.classList.toggle('ntl-visible');
-    if (domainPanel.classList.contains('ntl-visible')) loadDomains();
-  });
-  document.getElementById('ntl-domain-close').addEventListener('click', () => {
-    domainPanel.classList.remove('ntl-visible');
-  });
-  document.getElementById('ntl-btn-add-domain').addEventListener('click', handleAddDomain);
-  domainInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleAddDomain();
   });
 
   render();

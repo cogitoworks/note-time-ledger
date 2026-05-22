@@ -30,7 +30,7 @@ self.NTL = NTL;
 
 NTL.db = (() => {
   const DB_NAME = 'note-time-ledger';
-  const DB_VERSION = 2;
+  const DB_VERSION = 1;
   const STORE_NAME = 'snapshots';
 
   /** @type {IDBDatabase | null} */
@@ -51,9 +51,6 @@ NTL.db = (() => {
           store.createIndex('articleId', 'articleId', { unique: false });
           store.createIndex('date', 'date', { unique: false });
           store.createIndex('articleId_date', ['articleId', 'date'], { unique: false });
-        }
-        if (!db.objectStoreNames.contains('domains')) {
-          db.createObjectStore('domains', { keyPath: 'domain' });
         }
       };
       req.onsuccess = (e) => { _db = e.target.result; resolve(_db); };
